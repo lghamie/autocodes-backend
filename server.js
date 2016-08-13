@@ -19,6 +19,7 @@ var morgan = require('morgan');
 app.use(bodyParser.json()); // for parsing application/json
 app.use(bodyParser.urlencoded({ extended: true })); // for parsing application/x-www-form-urlencoded
 app.use(morgan('combined'));
+router.use(express.static(__dirname + '/profile-pics'));
 
 var port = 3002;
 winston.level = 'debug';
