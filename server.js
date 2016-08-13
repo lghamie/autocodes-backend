@@ -31,6 +31,25 @@ var pool = mysql.createPool({
     database: 'autoc'
 });
 
+app.get('/user/:user_fb_id', function(req, res) {
+
+
+    pool.query('SELECT * from user WHERE user_fb_id = ?', [user_fb_id], function(err, result) {
+        if (err) {
+            winston.error("Error finding user", err);
+            res.status(400).send({ error: err });
+            return;
+        }
+        if(result[0]){            
+            res.send({
+                user: result
+            });
+        } else {            
+            res.status(404).send({});
+        }
+    });
+});
+
 app.post('/user', upload.single('avatar'), function(req, res) {
     var user_fb_id = req.body.user_fb_id;
     var name = req.body.name;
@@ -38,20 +57,20 @@ app.post('/user', upload.single('avatar'), function(req, res) {
     if (!(user_fb_id != null)) {
         var err = "Please provide user_fb_id";
         winston.error(err);
-        res.send({ error: err });
+        res.status(400).send({ error: err });
         return;
     }
     if (!(name != null)) {
         var err = "Please provide a name";
         winston.error(err);
-        res.send({ error: err });
+        res.status(400).send({ error: err });
         return;
     }
 
     pool.query('INSERT INTO user (user_fb_id, name) VALUES (?, ?)', [user_fb_id, name], function(err, result) {
         if (err) {
             winston.error("Error creating user", err);
-            res.send({ error: err });
+            res.status(400).send({ error: err });
             return;
         }
         res.send({
@@ -72,13 +91,13 @@ app.post('/group', function(req, res) {
     if (!(name != null)) {
         var err = "Please provide a group name";
         winston.error(err);
-        res.send({ error: err });
+        res.status(400).send({ error: err });
         return;
     }
 
     pool.getConnection(function(err, connection) {
         if (err) {
-            res.send({ error: err });
+            res.status(400).send({ error: err });
             winston.error(err);
             return;
         }
@@ -86,7 +105,7 @@ app.post('/group', function(req, res) {
         connection.beginTransaction(function(err) {
             if (err) {
                 connection.rollback(function() {
-                    res.send({ error: err });
+                    res.status(400).send({ error: err });
                 });
                 winston.error(err);
                 return;
@@ -95,7 +114,7 @@ app.post('/group', function(req, res) {
                 function(err, result) {
                     if (err) {
                         connection.rollback(function() {
-                            res.send({ error: err });
+                            res.status(400).send({ error: err });
                         });
                         winston.error(err);
                         return;
@@ -111,7 +130,7 @@ app.post('/group', function(req, res) {
                         function(err, result) {
                             if (err) {
                                 connection.rollback(function() {
-                                    res.send({ error: err });
+                                    res.status(400).send({ error: err });
                                 });
                                 winston.error(err);
                                 return;
@@ -119,7 +138,7 @@ app.post('/group', function(req, res) {
                             connection.commit(function(err) {
                                 if (err) {
                                     connection.rollback(function() {
-                                        res.send({ error: err });
+                                        res.status(400).send({ error: err });
                                     });
                                     winston.error(err);
                                     return;
@@ -138,7 +157,7 @@ app.get('/groups/:userid', function(req, res) {
     if (!(userid != null)) {
         var err = "Please provide a userid";
         winston.error(err);
-        res.send({ error: err });
+        res.status(400).send({ error: err });
         return;
     }
     pool.query('SELECT `group`.group_id, `group`.name FROM `group` INNER JOIN group_user ON `group`.group_id = group_user.group_id INNER JOIN user ON user.user_id = group_user.user_id ' +
@@ -160,7 +179,7 @@ app.get('/group/:groupid', function(req, res) {
     if (!(groupid != null)) {
         var err = "Please provide a group id";
         winston.error(err);
-        res.send({ error: err });
+        res.status(400).send({ error: err });
         return;
     }
 
@@ -168,7 +187,7 @@ app.get('/group/:groupid', function(req, res) {
         ' WHERE group.group_id = ?', groupid,
         function(err, rows, fields) {
             if (err) {
-                res.send({ error: err });
+                res.status(400).send({ error: err });
                 winston.error(err);
                 return;
             }
