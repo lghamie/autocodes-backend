@@ -4,15 +4,15 @@ var app = express();
 var bodyParser = require('body-parser');
 var multer = require('multer'); // v1.0.5
 var storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, './profile-pics');
-  },
-  filename: function (req, file, cb) {
-    cb(null, req.body.user_fb_id + ".png");
-  }
+    destination: function(req, file, cb) {
+        cb(null, './profile-pics');
+    },
+    filename: function(req, file, cb) {
+        cb(null, req.body.user_fb_id + ".png");
+    }
 });
 
-var upload = multer({ 'storage': storage});
+var upload = multer({ 'storage': storage });
 var winston = require('winston');
 var morgan = require('morgan');
 
@@ -25,10 +25,10 @@ winston.level = 'debug';
 
 var pool = mysql.createPool({
     connectionLimit: 10,
-    host: 'localhost',
+    host: '107.170.81.44',
     user: 'root',
-    password: 'iquallnet',
-    database: 'autos'
+    password: 'xx',
+    database: 'autoc'
 });
 
 app.post('/user', upload.single('avatar'), function(req, res) {
@@ -36,7 +36,7 @@ app.post('/user', upload.single('avatar'), function(req, res) {
     var name = req.body.name;
 
     if (!(user_fb_id != null)) {
-        var err = "Please provide a userid";
+        var err = "Please provide user_fb_id";
         winston.error(err);
         res.send({ error: err });
         return;
@@ -47,6 +47,22 @@ app.post('/user', upload.single('avatar'), function(req, res) {
         res.send({ error: err });
         return;
     }
+
+    pool.query('INSERT INTO user (user_fb_id, name) VALUES (?, ?)', [user_fb_id, name], function(err, result) {
+        if (err) {
+            winston.error("Error creating user", err);
+            res.send({ error: err });
+            return;
+        }
+        res.send({
+            user: {
+                user_id: result.user_id,
+                user_fb_id: user_fb_id,
+                name: name
+            }
+        });
+    });
+
 });
 
 app.post('/group', function(req, res) {
@@ -60,54 +76,64 @@ app.post('/group', function(req, res) {
         return;
     }
 
-    pool.beginTransaction(function(err) {
+    pool.getConnection(function(err, connection) {
         if (err) {
-            pool.rollback(function() {
-                res.send({ error: err });
-            });
+            res.send({ error: err });
             winston.error(err);
             return;
         }
-        pool.query('INSERT INTO group (name, active) VALUES (?, ?)', [name, 0],
-            function(err, result) {
-                if (err) {
-                    pool.rollback(function() {
-                        res.send({ error: err });
-                    });
-                    winston.error(err);
-                    return;
-                }
-                var valuesToInsert = [];
 
-                for (var i in users) {
-                    valuesToInsert.push(result.id, users[i], 0);
-                }
-                pool.query('INSERT INTO group_user (group_id, user_id, is_driver) VALUES ?', [valuesToInsert],
-                    function(err, result) {
-                        if (err) {
-                            pool.rollback(function() {
-                                res.send({ error: err });
-                            });
-                            winston.error(err);
-                            return;
-                        }
-                        connection.commit(function(err) {
+        connection.beginTransaction(function(err) {
+            if (err) {
+                connection.rollback(function() {
+                    res.send({ error: err });
+                });
+                winston.error(err);
+                return;
+            }
+            connection.query('INSERT INTO `group` (name, active) VALUES (?, ?)', [name, 0],
+                function(err, result) {
+                    if (err) {
+                        connection.rollback(function() {
+                            res.send({ error: err });
+                        });
+                        winston.error(err);
+                        return;
+                    }
+                    var valuesToInsert = [];
+                    console.log(result);
+
+                    for (var i in users) {
+                        valuesToInsert.push([result.insertId, users[i], 0]);
+                    }
+                    console.log(valuesToInsert);
+                    connection.query('INSERT INTO group_user (group_id, user_id, is_driver) VALUES ?', [valuesToInsert],
+                        function(err, result) {
                             if (err) {
-                                pool.rollback(function() {
+                                connection.rollback(function() {
                                     res.send({ error: err });
                                 });
                                 winston.error(err);
                                 return;
                             }
-                            res.send({ "group": result });
+                            connection.commit(function(err) {
+                                if (err) {
+                                    connection.rollback(function() {
+                                        res.send({ error: err });
+                                    });
+                                    winston.error(err);
+                                    return;
+                                }
+                                res.send({ "group": { "group_id": result.insertId, "name": name } });
+                            });
                         });
-                    });
-            });
+                });
+        });
     });
 });
 
 app.get('/groups/:userid', function(req, res) {
-    var userid = req.param("userid");
+    var userid = req.params.userid;
 
     if (!(userid != null)) {
         var err = "Please provide a userid";
@@ -115,7 +141,7 @@ app.get('/groups/:userid', function(req, res) {
         res.send({ error: err });
         return;
     }
-    pool.query('SELECT * FROM group INNER JOIN group_user ON group.group_id = group_user.group_id INNER JOIN user ON user.user_id = group_user.user_id' +
+    pool.query('SELECT `group`.group_id, `group`.name FROM `group` INNER JOIN group_user ON `group`.group_id = group_user.group_id INNER JOIN user ON user.user_id = group_user.user_id ' +
         ' WHERE user.user_id = ?', userid,
         function(err, rows, fields) {
             if (err) {
@@ -123,12 +149,13 @@ app.get('/groups/:userid', function(req, res) {
                 winston.error(err);
                 return;
             }
-            res.send({ "groups": rows[0] });
+
+            res.send({ "groups": rows });
         });
 });
 
-app.get('/groupUsers/:groupid', function(req, res) {
-    var groupid = req.param("groupid");
+app.get('/group/:groupid', function(req, res) {
+    var groupid = req.params.groupid;
 
     if (!(groupid != null)) {
         var err = "Please provide a group id";
@@ -137,7 +164,7 @@ app.get('/groupUsers/:groupid', function(req, res) {
         return;
     }
 
-    pool.query('SELECT * FROM group INNER JOIN group_user ON group.group_id = group_user.group_id INNER JOIN user ON user.user_id = group_user.user_id' +
+    pool.query('SELECT *, `group`.name as group_name FROM `group` INNER JOIN group_user ON `group`.group_id = group_user.group_id INNER JOIN user ON user.user_id = group_user.user_id' +
         ' WHERE group.group_id = ?', groupid,
         function(err, rows, fields) {
             if (err) {
@@ -145,7 +172,22 @@ app.get('/groupUsers/:groupid', function(req, res) {
                 winston.error(err);
                 return;
             }
-            res.send({ "users": rows[0] });
+            var g = rows[0];
+            var resp = {
+                group_d: g.group_id,
+                name: g.group_name,
+                active: g.active,
+                users: []
+            };
+
+            for (var i = 0; i < rows.length; i++) {
+                resp.users.push({
+                    user_id: rows[i].user_id,
+                    user_fb_id: rows[i].user_fb_id,
+                    is_driver: rows[i].is_driver
+                });
+            }
+            res.send(resp);
         });
 });
 
