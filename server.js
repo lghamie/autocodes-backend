@@ -20,7 +20,7 @@ app.use(bodyParser.json()); // for parsing application/json
 app.use(bodyParser.urlencoded({ extended: true })); // for parsing application/x-www-form-urlencoded
 app.use(morgan('combined'));
 
-var port = 3001;
+var port = 3002;
 winston.level = 'debug';
 
 var pool = mysql.createPool({
