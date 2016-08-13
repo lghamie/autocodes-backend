@@ -58,11 +58,13 @@ app.get('/user/:user_fb_id', function(req, res) {
     });
 });
 
-app.post('/user', upload.single('avatar'), function(req, res) {
+app.post('/user',/* upload.single('avatar'),*/ function(req, res) {
     var user_fb_id = req.body.user_fb_id;
     var name = req.body.name;
     var height = req.body.height;
     var weight = req.body.weight;
+    var avatar = req.body.avatar;
+    
     
     if (!(user_fb_id != null)) {
         var err = "Please provide user_fb_id";
@@ -88,9 +90,14 @@ app.post('/user', upload.single('avatar'), function(req, res) {
         res.status(400).send({ error: err });
         return;
     }
+    if(!(avatar != null)){
+        var err = "Please provide an avatar url";
+        winston.error(err);
+        res.status(400).send({ error: err });
+        return;
+    }
 
-
-    pool.query('INSERT INTO user (user_fb_id, name, height, weight) VALUES (?, ?, ?, ?)', [user_fb_id, name, height, weight], function(err, result) {
+    pool.query('INSERT INTO user (user_fb_id, name, height, weight, avatar) VALUES (?, ?, ?, ?, ?)', [user_fb_id, name, height, weight, avatar], function(err, result) {
         if (err) {
             winston.error("Error creating user", err);
             res.status(400).send({ error: err });
