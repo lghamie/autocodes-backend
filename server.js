@@ -117,9 +117,16 @@ app.post('/user',/* upload.single('avatar'),*/ function(req, res) {
 app.post('/group', function(req, res) {
     var name = req.body.name;
     var users = req.body.users;
+    var admin = req.body.admin;
 
     if (!(name != null)) {
         var err = "Please provide a group name";
+        winston.error(err);
+        res.status(400).send({ error: err });
+        return;
+    }
+    if (!(admin != null)) {
+        var err = "Please provide an admin";
         winston.error(err);
         res.status(400).send({ error: err });
         return;
@@ -149,23 +156,30 @@ app.post('/group', function(req, res) {
                         winston.error(err);
                         return;
                     }
-                    var valuesToInsert = [];
                     console.log(result);
+                    var groupResult = result;
 
-                    for (var i in users) {
-                        valuesToInsert.push([result.insertId, users[i], 0]);
-                    }
-                    console.log(valuesToInsert);
-                    connection.query('INSERT INTO group_user (group_id, user_id, is_driver) VALUES ?', [valuesToInsert],
-                        function(err, result) {
-                            if (err) {
-                                connection.rollback(function() {
-                                    res.status(400).send({ error: err });
-                                });
-                                winston.error(err);
-                                return;
+                    connection.query('SELECT user_fb_id, user_id FROM user WHERE user_fb_id IN(?)', [users],
+                        function(err, rows) {
+                        if (err) {
+                            connection.rollback(function() {
+                                res.status(400).send({ error: err });
+                            });
+                            winston.error(err);
+                            return;
+                        }
+
+
+                        var valuesToInsert = [];
+                        for (var i in rows) {
+                            if(rows[i].user_fb_id == admin){
+                                valuesToInsert.push([groupResult.insertId, rows[i].user_id, 0, 0]);
                             }
-                            connection.commit(function(err) {
+                        }
+
+                        console.log(valuesToInsert);
+                        connection.query('INSERT INTO group_user (group_id, user_id, is_driver, is_admin) VALUES ?', [valuesToInsert],
+                            function(err, result) {
                                 if (err) {
                                     connection.rollback(function() {
                                         res.status(400).send({ error: err });
@@ -173,10 +187,21 @@ app.post('/group', function(req, res) {
                                     winston.error(err);
                                     return;
                                 }
-                                res.send({ "group": { "group_id": result.insertId, "name": name } });
+                                connection.commit(function(err) {
+                                    if (err) {
+                                        connection.rollback(function() {
+                                            res.status(400).send({ error: err });
+                                        });
+                                        winston.error(err);
+                                        return;
+                                    }
+                                    res.send({ "group": { "group_id": result.insertId, "name": name } });
+                                });
                             });
                         });
-                });
+                    });
+
+
         });
     });
 });
