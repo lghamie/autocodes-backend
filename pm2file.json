@@ -1,0 +1,16 @@
+{
+    "name"        : "Autocodes Backend",
+    "script"      : "server.js",
+    "args"        : [""],
+    "watch"       : true,
+    "node_args"   : "--harmony",
+    "env": {
+        "NODE_ENV": "production",
+    },
+    "exec_mode" : "fork",
+    "exec_interpreter" : "node",
+    "autorestart"      : false,
+    "error_file" : "log.log",
+    "out_file"   : "log.log",
+    "merge_logs" : true,
+}

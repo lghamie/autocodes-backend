@@ -50,7 +50,7 @@ app.get('/user/:user_fb_id', function(req, res) {
         }
         if(result[0]){            
             res.send({
-                user: result
+                user: result[0]
             });
         } else {            
             res.status(404).send({});
@@ -190,7 +190,7 @@ app.get('/groups/:userid', function(req, res) {
         res.status(400).send({ error: err });
         return;
     }
-    pool.query('SELECT `group`.group_id, `group`.name FROM `group` INNER JOIN group_user ON `group`.group_id = group_user.group_id INNER JOIN user ON user.user_id = group_user.user_id ' +
+    pool.query('SELECT `group`.group_id, `group`.name, `group`.active FROM `group` INNER JOIN group_user ON `group`.group_id = group_user.group_id INNER JOIN user ON user.user_id = group_user.user_id ' +
         ' WHERE user.user_fb_id = ?', userid,
         function(err, rows, fields) {
             if (err) {
