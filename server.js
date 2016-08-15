@@ -32,7 +32,7 @@ var pool = mysql.createPool({
     database: 'autoc'
 });
 
-app.get('/user/:x', function(req, res) {
+app.get('/user/:user_fb_id', function(req, res) {
     var user_fb_id = req.params.user_fb_id;
 
     if (!(user_fb_id != null)) {
