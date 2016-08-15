@@ -391,7 +391,7 @@ app.get('/group/:groupid', function(req, res) {
                 group_id: g.group_id,
                 name: g.group_name,
                 active: g.active,
-                driver: g.driver,
+                driver: g.driver_id,
                 users: []
             };
 
