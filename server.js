@@ -32,7 +32,7 @@ var pool = mysql.createPool({
     database: 'autoc'
 });
 
-app.get('/user/:user_fb_id', function(req, res) {
+app.get('/user/:x', function(req, res) {
     var user_fb_id = req.params.user_fb_id;
 
     if (!(user_fb_id != null)) {
@@ -153,7 +153,7 @@ app.post('/group/activate/', function(req, res) {
 
     pool.query('SELECT * FROM `group` INNER JOIN group_user ON group_user.group_id = `group`.group_id WHERE user_id IN ' +
         '(SELECT user.user_id FROM `group` INNER JOIN group_user ON `group`.group_id = group_user.group_id INNER JOIN user ON user.user_id = group_user.user_id' +
-        'WHERE group.group_id = ?) and active = 1', [group_id],
+        'WHERE `group`.group_id = ?) and active = 1', [group_id],
         function(err, rows) {
             if (err) {
                 winston.error("Error activating group", err);
@@ -383,7 +383,7 @@ app.get('/group/:groupid', function(req, res) {
     }
 
     pool.query('SELECT *, `group`.name as group_name, user.name as user_name FROM `group` INNER JOIN group_user ON `group`.group_id = group_user.group_id INNER JOIN user ON user.user_id = group_user.user_id' +
-        ' WHERE group.group_id = ?', groupid,
+        ' WHERE `group`.group_id = ?', groupid,
         function(err, rows, fields) {
             if (err) {
                 res.status(400).send({ error: err });
