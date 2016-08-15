@@ -292,7 +292,9 @@ app.post('/group', function(req, res) {
                             var valuesToInsert = [];
                             for (var i in rows) {
                                 if (rows[i].user_fb_id == admin) {
-                                    valuesToInsert.push([groupResult.insertId, rows[i].user_id, 0, 0]);
+                                    valuesToInsert.push([groupResult.insertId, rows[i].user_id, 0, 1]);
+                                } else {
+                                    valuesToInsert.push([groupResult.insertId, rows[i].user_id, 0, 0]);                                    
                                 }
                             }
 
