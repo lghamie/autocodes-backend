@@ -357,7 +357,7 @@ app.get('/group/:groupid', function(req, res) {
         return;
     }
 
-    pool.query('SELECT *, `group`.name, user.name as user_name as group_name FROM `group` INNER JOIN group_user ON `group`.group_id = group_user.group_id INNER JOIN user ON user.user_id = group_user.user_id' +
+    pool.query('SELECT *, `group`.name as group_name, user.name as user_name FROM `group` INNER JOIN group_user ON `group`.group_id = group_user.group_id INNER JOIN user ON user.user_id = group_user.user_id' +
         ' WHERE group.group_id = ?', groupid,
         function(err, rows, fields) {
             if (err) {
