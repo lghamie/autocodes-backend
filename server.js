@@ -133,6 +133,30 @@ app.get('/group/:groupid/leave/:user_fb_id', function(req, res) {
 
 });
 
+
+app.post('/group/deactivate/', function(req, res) {
+    var group_id = req.body.group_id;
+
+    if (!(group_id != null)) {
+        var err = "Please provide group_id";
+        winston.error(err);
+        res.status(400).send({ error: err });
+        return;
+    }
+
+    pool.query('UPDATE `group` SET active = 0 WHERE group_id = ?', [group_id], function(err, result) {
+        if (err) {
+            winston.error("Error activating group", err);
+            res.status(400).send({ error: err });
+            return;
+        }
+        res.send({
+            group: result[0]
+        });
+    });
+});
+
+
 app.post('/group/activate/', function(req, res) {
     var group_id = req.body.group_id;
     var driver = req.body.driver;
