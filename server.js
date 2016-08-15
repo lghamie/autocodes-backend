@@ -60,7 +60,7 @@ app.get('/user/:user_fb_id', function(req, res) {
 
 
 app.delete('/group/:group_id', function(req, res) {
-    var groupid = req.params.groupid;
+    var groupid = req.params.group_id;
 
     if (!(groupid != null)) {
         var err = "Please provide a group id";
