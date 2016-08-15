@@ -182,7 +182,7 @@ app.post('/group/activate/', function(req, res) {
                     driver = result[0].user_fb_id;
                 }
               */  
-                pool.query('UPDATE `group` SET active = 1, driver_id' + driver + ' WHERE group_id = ?', [group_id], function(err, result) {
+                pool.query('UPDATE `group` SET active = 1, driver_id = ? WHERE group_id = ?', [driver, group_id], function(err, result) {
                     if (err) {
                         winston.error("Error activating group", err);
                         res.status(400).send({ error: err });
