@@ -133,11 +133,19 @@ app.get('/group/:groupid/leave/:user_fb_id', function(req, res) {
 
 });
 
-app.get('/group/activate/:group_id', function(req, res) {
-    var group_id = req.params.group_id;
+app.post('/group/activate/', function(req, res) {
+    var group_id = req.body.group_id;
+    var driver = req.body.driver;
 
     if (!(group_id != null)) {
         var err = "Please provide group_id";
+        winston.error(err);
+        res.status(400).send({ error: err });
+        return;
+    }
+
+    if (!(driver != null)) {
+        var err = "Please provide a driver";
         winston.error(err);
         res.status(400).send({ error: err });
         return;
@@ -158,22 +166,37 @@ app.get('/group/activate/:group_id', function(req, res) {
                 });
                 return;
             }
-
-            pool.query('UPDATE `group` SET active = 1 WHERE group_id = ?', [group_id], function(err, result) {
+            /*
+            pool.query('SELECT * from user WHERE user_fb_id = ?', [group_id], function(err, result) {
                 if (err) {
                     winston.error("Error activating group", err);
                     res.status(400).send({ error: err });
                     return;
                 }
-                if (result[0]) {
-                    res.send({
-                        group: result[0]
-                    });
+                var driver;
+                if(!result[0]){
+                    winston.error("Driver user does not exist!", err);
+                    res.status(400).send({ error: err });
+                    return;    
                 } else {
-                    res.status(404).send({});
+                    driver = result[0].user_fb_id;
                 }
+              */  
+                pool.query('UPDATE `group` SET active = 1 driver_id' + driver + ' WHERE group_id = ?', [group_id], function(err, result) {
+                    if (err) {
+                        winston.error("Error activating group", err);
+                        res.status(400).send({ error: err });
+                        return;
+                    }
+                    if (result[0]) {
+                        res.send({
+                            group: result[0]
+                        });
+                    } else {
+                        res.status(404).send({});
+                    }
+                });
             });
-        });
 
 });
 
@@ -292,14 +315,14 @@ app.post('/group', function(req, res) {
                             var valuesToInsert = [];
                             for (var i in rows) {
                                 if (rows[i].user_fb_id == admin) {
-                                    valuesToInsert.push([groupResult.insertId, rows[i].user_id, 0, 1]);
+                                    valuesToInsert.push([groupResult.insertId, rows[i].user_id, 1]);
                                 } else {
-                                    valuesToInsert.push([groupResult.insertId, rows[i].user_id, 0, 0]);                                    
+                                    valuesToInsert.push([groupResult.insertId, rows[i].user_id, 0]);                                    
                                 }
                             }
 
                             console.log(valuesToInsert);
-                            connection.query('INSERT INTO group_user (group_id, user_id, is_driver, is_admin) VALUES ?', [valuesToInsert],
+                            connection.query('INSERT INTO group_user (group_id, user_id, is_admin) VALUES ?', [valuesToInsert],
                                 function(err, result) {
                                     if (err) {
                                         connection.rollback(function() {
@@ -380,7 +403,7 @@ app.get('/group/:groupid', function(req, res) {
                     user_id: rows[i].user_id,
                     name: rows[i].user_name,
                     user_fb_id: rows[i].user_fb_id,
-                    is_driver: rows[i].is_driver
+            //        is_driver: rows[i].is_driver
                 });
             }
             res.send(resp);
