@@ -152,8 +152,8 @@ app.post('/group/activate/', function(req, res) {
     }
 
     pool.query('SELECT * FROM `group` INNER JOIN group_user ON group_user.group_id = `group`.group_id WHERE user_id IN ' +
-        '(SELECT user.user_id FROM `group` INNER JOIN group_user ON `group`.group_id = group_user.group_id INNER JOIN user ON user.user_id = group_user.user_id' +
-        'WHERE `group`.group_id = ?) and active = 1', [group_id],
+        '(SELECT user.user_id FROM `group` INNER JOIN group_user ON `group`.group_id = group_user.group_id INNER JOIN user ON user.user_id = group_user.user_id ' +
+        ' WHERE `group`.group_id = ?) and active = 1', [group_id],
         function(err, rows) {
             if (err) {
                 winston.error("Error activating group", err);
@@ -182,7 +182,7 @@ app.post('/group/activate/', function(req, res) {
                     driver = result[0].user_fb_id;
                 }
               */  
-                pool.query('UPDATE `group` SET active = 1 driver_id' + driver + ' WHERE group_id = ?', [group_id], function(err, result) {
+                pool.query('UPDATE `group` SET active = 1, driver_id' + driver + ' WHERE group_id = ?', [group_id], function(err, result) {
                     if (err) {
                         winston.error("Error activating group", err);
                         res.status(400).send({ error: err });
