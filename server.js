@@ -60,7 +60,7 @@ app.get('/user/:x', function(req, res) {
 
 
 app.delete('/group/:group_id', function(req, res) {
-     var groupid = req.params.groupid;
+    var groupid = req.params.groupid;
 
     if (!(groupid != null)) {
         var err = "Please provide a group id";
@@ -71,15 +71,15 @@ app.delete('/group/:group_id', function(req, res) {
 
     pool.query('DELETE FROM `group` where group_id = ?', groupid,
         function(err, rows, fields) {
-        if (err) {
-            winston.error("Error finding user ", err);
-            res.status(400).send({ error: err });
-            return;
-        }
-        res.send({
-            msg: "Succesfully left group"
+            if (err) {
+                winston.error("Error finding user ", err);
+                res.status(400).send({ error: err });
+                return;
+            }
+            res.send({
+                msg: "Succesfully left group"
+            });
         });
-    });
 });
 
 app.get('/group/:groupid/leave/:user_fb_id', function(req, res) {
@@ -181,22 +181,18 @@ app.post('/group/activate/', function(req, res) {
                 } else {
                     driver = result[0].user_fb_id;
                 }
-              */  
-                pool.query('UPDATE `group` SET active = 1, driver_id = ? WHERE group_id = ?', [driver, group_id], function(err, result) {
-                    if (err) {
-                        winston.error("Error activating group", err);
-                        res.status(400).send({ error: err });
-                        return;
-                    }
-                    if (result[0]) {
-                        res.send({
-                            group: result[0]
-                        });
-                    } else {
-                        res.status(404).send({});
-                    }
+              */
+            pool.query('UPDATE `group` SET active = 1, driver_id = ? WHERE group_id = ?', [driver, group_id], function(err, result) {
+                if (err) {
+                    winston.error("Error activating group", err);
+                    res.status(400).send({ error: err });
+                    return;
+                }
+                res.send({
+                    group: result[0]
                 });
             });
+        });
 
 });
 
@@ -317,7 +313,7 @@ app.post('/group', function(req, res) {
                                 if (rows[i].user_fb_id == admin) {
                                     valuesToInsert.push([groupResult.insertId, rows[i].user_id, 1]);
                                 } else {
-                                    valuesToInsert.push([groupResult.insertId, rows[i].user_id, 0]);                                    
+                                    valuesToInsert.push([groupResult.insertId, rows[i].user_id, 0]);
                                 }
                             }
 
@@ -403,7 +399,7 @@ app.get('/group/:groupid', function(req, res) {
                     user_id: rows[i].user_id,
                     name: rows[i].user_name,
                     user_fb_id: rows[i].user_fb_id,
-            //        is_driver: rows[i].is_driver
+                    //        is_driver: rows[i].is_driver
                 });
             }
             res.send(resp);
