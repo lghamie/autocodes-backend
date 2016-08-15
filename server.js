@@ -48,24 +48,143 @@ app.get('/user/:user_fb_id', function(req, res) {
             res.status(400).send({ error: err });
             return;
         }
-        if(result[0]){            
+        if (result[0]) {
             res.send({
                 user: result[0]
             });
-        } else {            
+        } else {
             res.status(404).send({});
         }
     });
 });
 
-app.post('/user',/* upload.single('avatar'),*/ function(req, res) {
+
+app.del('/group/:group_id', function(req, res) {
+     var groupid = req.params.groupid;
+
+    if (!(groupid != null)) {
+        var err = "Please provide a group id";
+        winston.error(err);
+        res.status(400).send({ error: err });
+        return;
+    }
+
+    pool.query('DELETE FROM `group` where group_id = ?', groupid,
+        function(err, rows, fields) {
+        if (err) {
+            winston.error("Error finding user ", err);
+            res.status(400).send({ error: err });
+            return;
+        }
+        res.send({
+            msg: "Succesfully left group"
+        });
+    });
+});
+
+app.get('/group/:groupid/leave/:user_fb_id', function(req, res) {
+    var user_fb_id = req.params.user_fb_id;
+    var group_id = req.params.group_id;
+
+    if (!(user_fb_id != null)) {
+        var err = "Please provide user_fb_id";
+        winston.error(err);
+        res.status(400).send({ error: err });
+        return;
+    }
+
+    if (!(group_id != null)) {
+        var err = "Please provide a group_id";
+        winston.error(err);
+        res.status(400).send({ error: err });
+        return;
+    }
+
+    pool.query('SELECT * from group_user INNER JOIN user ON user.user_id =  group_user.user_id INNER JOIN `group` ON `group`.group_id = group_user.group_id' +
+        'WHERE user.user_fb_id = ? AND `group`.group_id = ?', [user_fb_id, group_id],
+        function(err, result) {
+            if (err) {
+                winston.error("Error finding user ", err);
+                res.status(400).send({ error: err });
+                return;
+            }
+            if (result[0]) {
+                if (result[0].active == 1) {
+                    res.status(400).statussend({
+                        error: "The group you're trying to leave is active"
+                    });
+                } else {
+                    pool.query('DELETE FROM group_user WHERE user.user_fb_id = ? AND `group`.group_id = ?', [user_fb_id, group_id],
+                        function(err, result) {
+                            if (err) {
+                                winston.error("Error finding user ", err);
+                                res.status(400).send({ error: err });
+                                return;
+                            }
+                            res.send({
+                                msg: "Succesfully left group"
+                            });
+                        });
+                }
+            } else {
+                res.status(404).send({});
+            }
+        });
+
+});
+
+app.get('/group/activate/:group_id', function(req, res) {
+    var group_id = req.params.group_id;
+
+    if (!(group_id != null)) {
+        var err = "Please provide group_id";
+        winston.error(err);
+        res.status(400).send({ error: err });
+        return;
+    }
+
+    pool.query('SELECT * FROM `group` INNER JOIN group_user ON group_user.group_id = `group`.group_id WHERE user_id IN ' +
+        '(SELECT user.user_id FROM `group` INNER JOIN group_user ON `group`.group_id = group_user.group_id INNER JOIN user ON user.user_id = group_user.user_id' +
+        'WHERE group.group_id = ?) and active = 1', [group_id],
+        function(err, rows) {
+            if (err) {
+                winston.error("Error activating group", err);
+                res.status(400).send({ error: err });
+                return;
+            }
+            if (rows[0]) {
+                res.send({
+                    error: "A user already has an active group"
+                });
+                return;
+            }
+
+            pool.query('UPDATE `group` SET active = 1 WHERE group_id = ?', [group_id], function(err, result) {
+                if (err) {
+                    winston.error("Error activating group", err);
+                    res.status(400).send({ error: err });
+                    return;
+                }
+                if (result[0]) {
+                    res.send({
+                        group: result[0]
+                    });
+                } else {
+                    res.status(404).send({});
+                }
+            });
+        });
+
+});
+
+app.post('/user', /* upload.single('avatar'),*/ function(req, res) {
     var user_fb_id = req.body.user_fb_id;
     var name = req.body.name;
     var height = req.body.height;
     var weight = req.body.weight;
     var avatar = req.body.avatar;
-    
-    
+
+
     if (!(user_fb_id != null)) {
         var err = "Please provide user_fb_id";
         winston.error(err);
@@ -78,19 +197,19 @@ app.post('/user',/* upload.single('avatar'),*/ function(req, res) {
         res.status(400).send({ error: err });
         return;
     }
-    if(!(height != null)){
+    if (!(height != null)) {
         var err = "Please provide height";
         winston.error(err);
         res.status(400).send({ error: err });
-        return;    
+        return;
     }
-    if(!(weight != null)){
+    if (!(weight != null)) {
         var err = "Please provide weight";
         winston.error(err);
         res.status(400).send({ error: err });
         return;
     }
-    if(!(avatar != null)){
+    if (!(avatar != null)) {
         var err = "Please provide an avatar url";
         winston.error(err);
         res.status(400).send({ error: err });
@@ -161,33 +280,25 @@ app.post('/group', function(req, res) {
 
                     connection.query('SELECT user_fb_id, user_id FROM user WHERE user_fb_id IN(?)', [users],
                         function(err, rows) {
-                        if (err) {
-                            connection.rollback(function() {
-                                res.status(400).send({ error: err });
-                            });
-                            winston.error(err);
-                            return;
-                        }
-
-
-                        var valuesToInsert = [];
-                        for (var i in rows) {
-                            if(rows[i].user_fb_id == admin){
-                                valuesToInsert.push([groupResult.insertId, rows[i].user_id, 0, 0]);
+                            if (err) {
+                                connection.rollback(function() {
+                                    res.status(400).send({ error: err });
+                                });
+                                winston.error(err);
+                                return;
                             }
-                        }
 
-                        console.log(valuesToInsert);
-                        connection.query('INSERT INTO group_user (group_id, user_id, is_driver, is_admin) VALUES ?', [valuesToInsert],
-                            function(err, result) {
-                                if (err) {
-                                    connection.rollback(function() {
-                                        res.status(400).send({ error: err });
-                                    });
-                                    winston.error(err);
-                                    return;
+
+                            var valuesToInsert = [];
+                            for (var i in rows) {
+                                if (rows[i].user_fb_id == admin) {
+                                    valuesToInsert.push([groupResult.insertId, rows[i].user_id, 0, 0]);
                                 }
-                                connection.commit(function(err) {
+                            }
+
+                            console.log(valuesToInsert);
+                            connection.query('INSERT INTO group_user (group_id, user_id, is_driver, is_admin) VALUES ?', [valuesToInsert],
+                                function(err, result) {
                                     if (err) {
                                         connection.rollback(function() {
                                             res.status(400).send({ error: err });
@@ -195,11 +306,19 @@ app.post('/group', function(req, res) {
                                         winston.error(err);
                                         return;
                                     }
-                                    res.send({ "group": { "group_id": result.insertId, "name": name } });
+                                    connection.commit(function(err) {
+                                        if (err) {
+                                            connection.rollback(function() {
+                                                res.status(400).send({ error: err });
+                                            });
+                                            winston.error(err);
+                                            return;
+                                        }
+                                        res.send({ "group": { "group_id": result.insertId, "name": name } });
+                                    });
                                 });
-                            });
                         });
-                    });
+                });
 
 
         });
