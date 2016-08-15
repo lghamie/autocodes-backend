@@ -59,7 +59,7 @@ app.get('/user/:user_fb_id', function(req, res) {
 });
 
 
-app.del('/group/:group_id', function(req, res) {
+app.delete('/group/:group_id', function(req, res) {
      var groupid = req.params.groupid;
 
     if (!(groupid != null)) {
@@ -357,7 +357,7 @@ app.get('/group/:groupid', function(req, res) {
         return;
     }
 
-    pool.query('SELECT *, `group`.name as group_name FROM `group` INNER JOIN group_user ON `group`.group_id = group_user.group_id INNER JOIN user ON user.user_id = group_user.user_id' +
+    pool.query('SELECT *, `group`.name, user.name as user_name as group_name FROM `group` INNER JOIN group_user ON `group`.group_id = group_user.group_id INNER JOIN user ON user.user_id = group_user.user_id' +
         ' WHERE group.group_id = ?', groupid,
         function(err, rows, fields) {
             if (err) {
@@ -367,7 +367,7 @@ app.get('/group/:groupid', function(req, res) {
             }
             var g = rows[0];
             var resp = {
-                group_d: g.group_id,
+                group_id: g.group_id,
                 name: g.group_name,
                 active: g.active,
                 users: []
@@ -376,6 +376,7 @@ app.get('/group/:groupid', function(req, res) {
             for (var i = 0; i < rows.length; i++) {
                 resp.users.push({
                     user_id: rows[i].user_id,
+                    name: rows[i].user_name,
                     user_fb_id: rows[i].user_fb_id,
                     is_driver: rows[i].is_driver
                 });
