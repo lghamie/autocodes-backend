@@ -59,6 +59,35 @@ app.get('/user/:user_fb_id', function(req, res) {
 });
 
 
+app.get('/getActiveGroup/:user_fb_id', function(req, res) {
+    var user_fb_id = req.params.user_fb_id;
+
+    if (!(user_fb_id != null)) {
+        var err = "Please provide user_fb_id";
+        winston.error(err);
+        res.status(400).send({ error: err });
+        return;
+    }
+
+
+    pool.query('SELECT `group`.group_id, `group`.name, `group`.active from group_user INNER JOIN user ON user.user_id =  group_user.user_id INNER JOIN `group` ON `group`.group_id = group_user.group_id ' +
+        ' WHERE user.user_fb_id = ? AND `group`.active = 1 LIMIT 1', [user_fb_id],
+        function(err, result) {
+            if (err) {
+                winston.error("Error finding active groups ", err);
+                res.status(400).send({ error: err });
+                return;
+            }
+            if (result[0]) {
+                res.send(result[0]);
+            } else {
+                res.status(404).send({});
+            }
+        });
+
+});
+
+
 app.delete('/group/:group_id', function(req, res) {
     var groupid = req.params.group_id;
 
