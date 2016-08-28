@@ -70,7 +70,7 @@ app.get('/getActiveGroup/:user_fb_id', function(req, res) {
     }
 
 
-    pool.query('SELECT `group`.group_id, `group`.name, `group`.active from group_user INNER JOIN user ON user.user_id =  group_user.user_id INNER JOIN `group` ON `group`.group_id = group_user.group_id ' +
+    pool.query('SELECT `group`.group_id, `group`.driver_id, `group`.driver_bac,  `group`.name, `group`.active from group_user INNER JOIN user ON user.user_id =  group_user.user_id INNER JOIN `group` ON `group`.group_id = group_user.group_id ' +
         ' WHERE user.user_fb_id = ? AND `group`.active = 1 LIMIT 1', [user_fb_id],
         function(err, result) {
             if (err) {
@@ -372,7 +372,7 @@ app.post('/group', function(req, res) {
                             }
 
                             console.log("Usuarios a insertar", valuesToInsert);
-                            
+
                             connection.query('INSERT INTO group_user (group_id, user_id, is_admin) VALUES ?', [valuesToInsert],
                                 function(err, result) {
                                     if (err) {
