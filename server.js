@@ -348,7 +348,7 @@ app.post('/group', function(req, res) {
                         winston.error(err);
                         return;
                     }
-                    console.log(result);
+                    console.log("Creado grupo ", result);
                     var groupResult = result;
 
                     connection.query('SELECT user_fb_id, user_id FROM user WHERE user_fb_id IN(?)', [users],
@@ -371,7 +371,8 @@ app.post('/group', function(req, res) {
                                 }
                             }
 
-                            console.log(valuesToInsert);
+                            console.log("Usuarios a insertar", valuesToInsert);
+                            
                             connection.query('INSERT INTO group_user (group_id, user_id, is_admin) VALUES ?', [valuesToInsert],
                                 function(err, result) {
                                     if (err) {
