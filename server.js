@@ -442,6 +442,12 @@ app.get('/group/:groupid', function(req, res) {
                 return;
             }
             var g = rows[0];
+            
+            if(!rows[0]){
+                res.status(404).send({});
+                return;
+            }
+
             var resp = {
                 group_id: g.group_id,
                 name: g.group_name,
