@@ -449,7 +449,7 @@ app.post('/group/driver_bac/', function(req, res) {
                 return;
             }
 
-            res.send({ "groups": rows });
+            res.send({ "status": "ok" });
         });
 });
 
