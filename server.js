@@ -471,7 +471,7 @@ app.post('/group/braceletStatus/', function(req, res) {
         return;
     }
 
-    pool.query('UPDATE `group` SET driver_bac = ? WHERE group_id = ? ', [braceletStatus, groupid],
+    pool.query('UPDATE `group` SET bracelet_status = ? WHERE group_id = ? ', [braceletStatus, groupid],
         function(err, rows, fields) {
             if (err) {
                 res.send({ error: err });
