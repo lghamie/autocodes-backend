@@ -424,7 +424,7 @@ app.get('/groups/:userid', function(req, res) {
 });
 
 
-app.post('/group/driver_bac/', function(req, res) {
+app.post('/group/driverBac/', function(req, res) {
     var groupid = req.body.groupid;
     var bac = req.body.bac;
 
@@ -441,7 +441,7 @@ app.post('/group/driver_bac/', function(req, res) {
         return;
     }
 
-    pool.query('UPDATE `group` SET driver_bac = ? WHERE group_id = ? ', [bac, groupid],
+    pool.query('UPDATE `group` SET driver_bac = ? WHERE group_id = ? ', [driver_bac, groupid],
         function(err, rows, fields) {
             if (err) {
                 res.send({ error: err });
@@ -452,6 +452,37 @@ app.post('/group/driver_bac/', function(req, res) {
             res.send({ "status": "ok" });
         });
 });
+
+
+app.post('/group/braceletStatus/', function(req, res) {
+    var groupid = req.body.groupid;
+    var braceletStatus = req.body.braceletStatus;
+
+    if (!(groupid != null)) {
+        var err = "Please provide a groupid";
+        winston.error(err);
+        res.status(400).send({ error: err });
+        return;
+    }
+    if (!(braceletStatus != null)) {
+        var err = "Please provide a braceletStatus";
+        winston.error(err);
+        res.status(400).send({ error: err });
+        return;
+    }
+
+    pool.query('UPDATE `group` SET driver_bac = ? WHERE group_id = ? ', [braceletStatus, groupid],
+        function(err, rows, fields) {
+            if (err) {
+                res.send({ error: err });
+                winston.error(err);
+                return;
+            }
+
+            res.send({ "status": "ok" });
+        });
+});
+
 
 app.get('/group/:groupid', function(req, res) {
     var groupid = req.params.groupid;
@@ -484,6 +515,7 @@ app.get('/group/:groupid', function(req, res) {
                 active: g.active,
                 driver: g.driver_id,
                 driver_bac: g.driver_bac,
+                bracelet_connected: g.bracelet_connected,
                 users: []
             };
 
