@@ -423,6 +423,36 @@ app.get('/groups/:userid', function(req, res) {
         });
 });
 
+
+app.post('/group/driver_bac/', function(req, res) {
+    var groupid = req.body.groupid;
+    var bac = req.body.bac;
+
+    if (!(groupid != null)) {
+        var err = "Please provide a groupid";
+        winston.error(err);
+        res.status(400).send({ error: err });
+        return;
+    }
+    if (!(bac != null)) {
+        var err = "Please provide a bac";
+        winston.error(err);
+        res.status(400).send({ error: err });
+        return;
+    }
+
+    pool.query('UPDATE `group` SET driver_bac = ? WHERE group_id = ? ', [driver_bac, group],
+        function(err, rows, fields) {
+            if (err) {
+                res.send({ error: err });
+                winston.error(err);
+                return;
+            }
+
+            res.send({ "groups": rows });
+        });
+});
+
 app.get('/group/:groupid', function(req, res) {
     var groupid = req.params.groupid;
 
