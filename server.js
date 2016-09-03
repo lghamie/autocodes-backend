@@ -441,7 +441,7 @@ app.post('/group/driverBac/', function(req, res) {
         return;
     }
 
-    pool.query('UPDATE `group` SET driver_bac = ? WHERE group_id = ? ', [driver_bac, groupid],
+    pool.query('UPDATE `group` SET driver_bac = ? WHERE group_id = ? ', [bac, groupid],
         function(err, rows, fields) {
             if (err) {
                 res.send({ error: err });
