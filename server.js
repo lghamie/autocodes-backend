@@ -410,7 +410,7 @@ app.get('/groups/:userid', function(req, res) {
         res.status(400).send({ error: err });
         return;
     }
-    pool.query('SELECT `group`.group_id, `group`.name, `group`.active, `group`.driver_bac FROM `group` INNER JOIN group_user ON `group`.group_id = group_user.group_id INNER JOIN user ON user.user_id = group_user.user_id ' +
+    pool.query('SELECT `group_user`.is_admin, `group`.group_id, `group`.name, `group`.active, `group`.driver_bac FROM `group` INNER JOIN group_user ON `group`.group_id = group_user.group_id INNER JOIN user ON user.user_id = group_user.user_id ' +
         ' WHERE user.user_fb_id = ?', userid,
         function(err, rows, fields) {
             if (err) {
