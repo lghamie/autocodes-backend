@@ -521,7 +521,7 @@ app.get('/group/:groupid', function(req, res) {
 
             for (var i = 0; i < rows.length; i++) {
                 if(rows[i].is_admin == 1){
-                    resp.admin = rows[i].user_id; 
+                    resp.admin = rows[i].user_fb_id; 
                 }
                 resp.users.push({
                     user_id: rows[i].user_id,
