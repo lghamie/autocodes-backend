@@ -520,6 +520,9 @@ app.get('/group/:groupid', function(req, res) {
             };
 
             for (var i = 0; i < rows.length; i++) {
+                if(rows[i].is_admin == 1){
+                    resp.is_admin = rows[i].user_id; 
+                }
                 resp.users.push({
                     user_id: rows[i].user_id,
                     name: rows[i].user_name,
