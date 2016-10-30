@@ -514,11 +514,12 @@ app.get('/group/:groupid', function(req, res) {
                 name: g.group_name,
                 active: g.active,
                 driver: g.driver_id,
-                driver_bac: g.driver_bac,
                 bracelet_connected: g.bracelet_connected,
                 users: []
             };
-
+            if(driver_bac){
+                resp.driver_bac = g.driver_bac;
+            }
             for (var i = 0; i < rows.length; i++) {
                 if(rows[i].is_admin == 1){
                     resp.admin = rows[i].user_fb_id; 
