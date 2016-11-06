@@ -517,7 +517,7 @@ app.get('/group/:groupid', function(req, res) {
                 bracelet_connected: g.bracelet_connected,
                 users: []
             };
-            if(g.driver_bac){
+            if(g.driver_bac != null){
                 resp.driver_bac = g.driver_bac;
             }
             for (var i = 0; i < rows.length; i++) {
